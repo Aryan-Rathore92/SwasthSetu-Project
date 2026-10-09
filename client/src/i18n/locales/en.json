@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "network": "Healthcare Network",
+    "contact": "Contact",
+    "login": "Login to Portal",
+    "logout": "Logout",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "title": "Connecting Rural India to Better Healthcare",
+    "subtitle": "SwasthSetu connects patients, frontline health workers, doctors, and healthcare facilities through one integrated digital healthcare coordination platform.",
+    "getStarted": "Get Started",
+    "exploreFeatures": "Explore Features",
+    "demoBadge": "Hackathon 2026 Demonstration System"
+  },
+  "roles": {
+    "patient": "Patient",
+    "health_worker": "Health Worker (ASHA/ANM)",
+    "doctor": "Doctor / Medical Officer",
+    "facility_admin": "Facility Administrator",
+    "district_admin": "District Administration (CMO)"
+  },
+  "triage": {
+    "title": "Health Assessment & Triage",
+    "red": "URGENT CLINICAL ATTENTION",
+    "yellow": "NEEDS CLINICAL REVIEW",
+    "green": "ROUTINE FOLLOW-UP",
+    "disclaimer": "Demo decision support only. Clinical decisions must always be made by qualified doctors."
+  },
+  "common": {
+    "save": "Save",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "search": "Search",
+    "filter": "Filter",
+    "status": "Status",
+    "date": "Date",
+    "actions": "Actions",
+    "viewDetails": "View Details"
+  }
+}
+
