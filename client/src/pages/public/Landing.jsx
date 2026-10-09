@@ -93,10 +93,6 @@ export const Landing = () => {
               transition={{ duration: 0.5 }}
               className="lg:col-span-7 space-y-6 text-left"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-100/70 text-brand-700 text-xs font-semibold">
-                <ShieldCheck className="w-4 h-4 text-brand-600" />
-                <span>National Hackathon 2026 • Rural Healthcare Architecture</span>
-              </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-navy-900 tracking-tight leading-tight">
                 Connecting Rural India to <span className="text-brand-500">Better Healthcare</span>
@@ -303,21 +299,54 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-brand-50 text-center border-t border-brand-100">
-        <div className="max-w-4xl mx-auto px-4 space-y-5">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-900">
-            Ready to Experience the 5-Role Demonstration?
-          </h2>
-          <p className="text-sm text-gray-600 max-w-xl mx-auto">
-            Test the complete workflow in local demo mode using pre-seeded accounts with fixed OTP (123456).
-          </p>
-          <div className="pt-2">
+      {/* Call to Action — Role Quick Access */}
+      <section className="py-16 bg-brand-50 border-t border-brand-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-900">
+              Try the 5-Role Live Demo
+            </h2>
+            <p className="text-sm text-gray-500 max-w-xl mx-auto">
+              Click any role below to instantly sign in and explore the full portal — no registration required for demo accounts.
+            </p>
+          </div>
+
+          {/* Role cards grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              { title: 'ASHA Worker', phone: '9876543211', color: 'bg-amber-500', path: '/healthworker/dashboard' },
+              { title: 'Doctor', phone: '9876543212', color: 'bg-brand-500', path: '/doctor/dashboard' },
+              { title: 'Patient', phone: '9876543210', color: 'bg-emerald-600', path: '/patient/dashboard' },
+              { title: 'Facility Admin', phone: '9876543213', color: 'bg-indigo-600', path: '/facility/dashboard' },
+              { title: 'District CMO', phone: '9876543214', color: 'bg-purple-600', path: '/district/dashboard' },
+            ].map((role) => (
+              <Link
+                key={role.path}
+                to="/login"
+                className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-surface-border hover:border-brand-300 hover:shadow-md transition-all text-center group"
+              >
+                <div className={`w-10 h-10 rounded-xl ${role.color} flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform`}>
+                  {role.title[0]}
+                </div>
+                <p className="text-xs font-bold text-navy-900 group-hover:text-brand-600">{role.title}</p>
+                <span className="text-[10px] text-gray-400 font-mono">{role.phone}</span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm px-8 py-3.5 rounded-xl shadow-lg transition-transform hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm px-8 py-3.5 rounded-xl shadow-md transition-all"
             >
-              <span>Launch Demo Portal</span>
+              <span>Go to Login Portal</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center gap-2 bg-white border-2 border-brand-500 text-brand-600 hover:bg-brand-50 font-semibold text-sm px-8 py-3.5 rounded-xl transition-all"
+            >
+              <span>Register as New Patient</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

@@ -3,6 +3,7 @@ import api from './client.js';
 // AUTH
 export const authApi = {
   sendOtp: (phone) => api.post('/auth/send-otp', { phone }),
+  register: (data) => api.post('/auth/register', data),
   login: (phone, otp) => api.post('/auth/login', { phone, otp }),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),

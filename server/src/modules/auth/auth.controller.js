@@ -143,3 +143,116 @@ export const getDemoAccounts = async (req, res, next) => {
   }
 };
 
+/**
+ * Self-registration — creates a new Patient user account and linked Patient record.
+ * Immediately issues a JWT so the user is logged in right after registration.
+ */
+export const registerSelf = async (req, res, next) => {
+  try {
+    const { name, phone, age, gender, village, district = 'Sitapur', address = '' } = req.body;
+
+    if (!name || !phone || !age || !gender || !village) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please fill in all required fields: name, phone, age, gender, and village.',
+      });
+    }
+
+    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number.' });
+    }
+
+    const secret = process.env.JWT_SECRET || 'swasthsetu_hackathon_jwt_secret_2026_super_safe';
+
+    // ── MongoDB mode ──────────────────────────────────────────────────────────
+    if (mongoose.connection.readyState === 1) {
+      const existing = await User.findOne({ phone });
+      if (existing) {
+        return res.status(409).json({ success: false, message: 'An account with this phone number already exists. Please log in instead.' });
+      }
+
+      const user = await User.create({ name, phone, role: 'patient', language: 'hi' });
+      const { Patient } = await import('../../models/Patient.js');
+      const patCount = await Patient.countDocuments();
+
+      const patient = await Patient.create({
+        patientId: `P-${20000 + patCount + 1}`,
+        userId: user._id,
+        name,
+        phone,
+        age: Number(age),
+        gender,
+        village,
+        district,
+        address: address || `${village}, ${district}`,
+        conditions: [],
+        allergies: [],
+        pregnancy: { isPregnant: false },
+        riskLevel: 'GREEN',
+        consentForSharing: true,
+      });
+
+      const token = jwt.sign({ id: user._id, role: 'patient', phone }, secret, { expiresIn: '7d' });
+      return res.status(201).json({
+        success: true,
+        message: `Welcome to SwasthSetu, ${name}! Your patient account has been created.`,
+        data: { token, user: { _id: user._id, name, phone, role: 'patient' }, patientId: patient.patientId },
+      });
+    }
+
+    // ── In-Memory mode ────────────────────────────────────────────────────────
+    const existing = memoryStore.users.find(u => u.phone === phone);
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'An account with this phone number already exists. Please log in instead.' });
+    }
+
+    const newUserId = `usr-patient-${Date.now()}`;
+    const newUser = {
+      _id: newUserId,
+      name,
+      phone,
+      role: 'patient',
+      facilityId: null,
+      language: 'hi',
+      isActive: true,
+      createdAt: new Date(),
+    };
+    memoryStore.users.push(newUser);
+
+    const patCount = memoryStore.patients.length;
+    const newPatientId = `P-${20000 + patCount + 1}`;
+    const newPatient = {
+      _id: `pat-new-${Date.now()}`,
+      patientId: newPatientId,
+      userId: newUserId,
+      name,
+      phone,
+      age: Number(age),
+      gender,
+      village,
+      district,
+      address: address || `${village}, ${district}`,
+      conditions: [],
+      allergies: [],
+      pregnancy: { isPregnant: false },
+      riskLevel: 'GREEN',
+      demoAbhaId: `ABHA-DEMO-${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
+      consentForSharing: true,
+      registeredBy: null,
+      registeredAtFacility: memoryStore.facilities[4] || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    memoryStore.patients.push(newPatient);
+
+    const token = jwt.sign({ id: newUserId, role: 'patient', phone }, secret, { expiresIn: '7d' });
+
+    res.status(201).json({
+      success: true,
+      message: `Welcome to SwasthSetu, ${name}! Your patient account has been created.`,
+      data: { token, user: { _id: newUserId, name, phone, role: 'patient' }, patientId: newPatientId },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

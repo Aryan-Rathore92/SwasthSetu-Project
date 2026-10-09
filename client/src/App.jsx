@@ -9,6 +9,7 @@ import { Landing } from './pages/public/Landing';
 import { About } from './pages/public/About';
 import { Contact } from './pages/public/Contact';
 import { Login } from './pages/auth/Login';
+import { Register } from './pages/auth/Register';
 
 // Patient pages
 import { PatientDashboard } from './pages/patient/Dashboard';
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             {/* Patient Portal Routes */}
             <Route
