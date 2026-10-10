@@ -1,220 +1,242 @@
-# SwasthSetu (स्वास्थ्य सेतु) 🏥🇮🇳
-### Digital Healthcare Coordination Platform for Rural & Underserved Communities in India
+Live Project : (https://deft-gecko-680942.netlify.app)
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com)
-[![Stack](https://img.shields.io/badge/Tech%20Stack-MERN%20%2B%20WebRTC%20%2B%20FHIR-blue)](https://github.com)
-[![Status](https://img.shields.io/badge/Hackathon-Ready-orange)](https://github.com)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+# SwasthSetu
 
-> **Important Hackathon Disclaimer**: *SwasthSetu is a functional demonstration platform developed for a 24-Hour National Hackathon. It is NOT a certified medical device, does not replace licensed doctors or national emergency dispatch lines (108/102), and is intended strictly to showcase public health digitisation architecture.*
+**Digital Healthcare Coordination Platform for Rural India**
 
----
+## 1. Project Overview
 
-## 🌟 Executive Summary
+* SwasthSetu is a web-based healthcare management platform.
+* It connects rural patients, health workers, doctors, hospitals, and district administrators.
+* It helps improve healthcare access and coordination in rural areas.
+* It provides a common platform for managing patient records, appointments, referrals, medicines, and emergencies.
 
-In rural India, patients face immense friction moving between public healthcare tiers:
-**Sub-Centres ➡️ Primary Health Centres (PHCs) ➡️ Community Health Centres (CHCs) ➡️ District Hospitals.**
+## 2. Problem Statement
 
-Their health records rarely move with them, causing repeated clinical assessments, lost longitudinal histories, delayed emergency referrals, and hours of unnecessary travel over poor roads.
+Rural communities face several healthcare challenges:
 
-**SwasthSetu** acts as an integrated digital coordination bridge (*Setu*) connecting **Patients**, **Frontline Health Workers (ASHA/ANM)**, **Medical Officers (Doctors)**, **Facility Administrators**, and **District Health Authorities (CMO)** into a unified real-time ecosystem.
+1. Limited access to specialist doctors.
+2. Long travel distances to hospitals.
+3. Delays in appointments and treatment.
+4. Scattered and unorganised medical records.
+5. Poor communication between healthcare facilities.
+6. Limited information about medicine availability.
+7. Delays in emergency referrals.
+8. Lack of proper patient follow-up.
 
----
+## 3. Proposed Solution
 
-## 🏗️ Architecture & Ecosystem
+SwasthSetu provides:
 
-```mermaid
-flowchart TD
-    subgraph Frontline ["Frontline Village Tier"]
-        P[Rural Patient] <-->|Assisted by| HW[ASHA / ANM Worker]
-        HW -->|Mobile Registration & Triage| SE[SwasthSetu Gateway]
-    end
+1. Centralised digital patient records.
+2. Online doctor appointments.
+3. Video consultations with doctors.
+4. Digital prescriptions.
+5. Patient referral tracking.
+6. Medicine availability tracking.
+7. Emergency SOS alerts.
+8. Health worker assistance.
+9. Hospital management dashboards.
+10. District-level healthcare monitoring.
 
-    subgraph Facility ["Primary & Secondary Health Facilities"]
-        SE <-->|OPD Queue & Teleconsult| DOC[Medical Officer / Doctor]
-        SE <-->|Beds, Stock, Transfer In/Out| FA[Facility Admin (PHC / CHC)]
-    end
+## 4. User Roles
 
-    subgraph District ["Governance & Oversight"]
-        SE <-->|Aggregated Health Metrics & FHIR Export| DA[District Admin (CMO)]
-    end
+The platform has five main user roles.
 
-    subgraph CoreEngine ["Platform Core Engine"]
-        TE[Deterministic Rule-Based Triage Engine]
-        PDF[PDFKit Prescription Engine]
-        WS[Socket.io Real-Time Telemetry]
-        GEO[Haversine Pharmacy Locator & Leaflet Map]
-        FHIR[HL7 FHIR R4 Interoperability]
-    end
+**1. Patient**
 
-    SE --- CoreEngine
-```
+* View medical records.
+* Book appointments.
+* Consult doctors online.
+* Access digital prescriptions.
+* Find nearby facilities with available medicines.
 
----
+**2. Health Worker (ASHA/ANM)**
 
-## 🚀 Key Functional Capabilities
+* Register rural patients.
+* Record basic health information.
+* Assist patients with healthcare services.
+* Perform initial health assessments.
+* Manage patient follow-ups.
 
-1. **Role-Based Access Control (5 Distinct Portals)**:
-   - **Rural Patient**: Profile, medical records, digital appointments, verified e-prescriptions, and geospatial medicine locator.
-   - **Health Worker (ASHA / ANM)**: Patient registration, community directory, vital assessments, and overdue home visit follow-ups.
-   - **Doctor / Medical Officer**: Live OPD queue token caller, WebRTC teleconsultation via Jitsi Meet, clinical Rx pad builder, and inter-facility referral authorizer.
-   - **Facility Admin**: OPD appointments management, real-time medicine inventory auditing with low-stock warnings, and referral transfer milestones.
-   - **District Health Admin (CMO)**: District-wide health analytics with Recharts, facility density monitoring, and ABDM-aligned HL7 FHIR R4 JSON exports.
+**3. Doctor**
 
-2. **Deterministic Triage Safety Engine**:
-   - Evaluates vital signs (HR, SpO2, Systolic/Diastolic BP, Temp, Blood Sugar) and red-flag symptoms.
-   - Generates non-negotiable **RED / YELLOW / GREEN** urgency categories with human-in-the-loop requirements.
-   - Provides bilingual clinical explanations in **English and Hindi (हिन्दी)**.
+* Manage patient appointments.
+* Conduct video consultations.
+* View patient medical history.
+* Generate digital prescriptions.
+* Refer patients to other hospitals.
 
-3. **Virtual Teleconsultation**:
-   - Integrated zero-friction WebRTC video consultation suite powered by Jitsi Meet.
-   - Allows remote doctors to examine village patients over low-bandwidth connections.
+**4. Facility Admin**
 
-4. **Printable PDF Prescription Pad**:
-   - Generates official, downloadable doctor prescriptions using **PDFKit** featuring clinical observations, drug dosages, instructions, doctor MCI registration, and demonstration watermark.
+* Manage hospital appointments.
+* Track available medicines.
+* Monitor medicine stock.
+* Manage patient referrals and transfers.
 
-5. **Geospatial Medicine Inventory Tracker**:
-   - Real-time stock audit search with distance calculation via the Haversine formula.
-   - Interactive Leaflet OpenStreetMap displaying nearby PHCs and CHCs with stock quantities.
+**5. District Admin**
 
-6. **Instant Emergency SOS Telemetry**:
-   - Dispatches emergency alerts with location details to nearby health facilities and the district command room via **Socket.io**.
+* Monitor healthcare facilities.
+* View district-level healthcare data.
+* Analyse hospital performance.
+* Generate healthcare reports.
 
-7. **Dual-Mode Resilient Database**:
-   - Zero-configuration automatic fallback: works seamlessly either with **MongoDB** or via an internal, pre-seeded **In-Memory Demonstration Repository** (45 rural patients, 11 facilities across all tiers, 5 role accounts, inventory, appointments, referrals).
+## 5. Main Features
 
----
+**1. Smart Patient Triage**
 
-## 🔑 1-Click Demo Accounts
+* Checks basic health information and symptoms.
+* Classifies patients into Red, Yellow, and Green priority levels.
+* Helps healthcare workers identify urgent cases.
+* Supports Hindi and English explanations.
 
-| Role | Name | Phone Number | Demo OTP | Direct Portal Route |
-| :--- | :--- | :--- | :--- | :--- |
-| **Frontline Worker (ASHA)** | Sunita Sharma | `9876543211` | `123456` | `/healthworker/dashboard` |
-| **Medical Officer (Doctor)** | Dr. Rajesh Verma | `9876543212` | `123456` | `/doctor/dashboard` |
-| **Rural Patient** | Ramesh Patel | `9876543210` | `123456` | `/patient/dashboard` |
-| **Facility Admin (CHC)** | Amit Singh | `9876543213` | `123456` | `/facility/dashboard` |
-| **District Admin (CMO)** | Dr. Sunita Rao | `9876543214` | `123456` | `/district/dashboard` |
+**2. Online Consultation**
 
-> *Tip: On the `/login` page, you can click on any role button to instantly sign in with one click without manually typing!*
+* Video consultation between patients and doctors.
+* Uses Jitsi Meet and WebRTC.
+* Helps reduce unnecessary hospital visits.
 
----
+**3. Digital Prescription**
 
-## 💻 Quick Start & Installation
+* Doctors can generate prescriptions digitally.
+* Prescriptions can be downloaded as PDFs.
+* Includes medicines, dosage, instructions, and doctor details.
 
-### Prerequisites
-- Node.js v18.0.0 or higher
-- npm v9.0.0 or higher
+**4. Medicine Availability Tracker**
 
-### 1. Clone & Install Dependencies
-```bash
-git clone https://github.com/your-username/swasthsetu.git
-cd swasthsetu
+* Shows medicine stock at healthcare facilities.
+* Helps users locate nearby facilities.
+* Displays facility locations on an interactive map.
 
-# Install dependencies for both backend and frontend monorepo workspaces
-npm install
-```
+**5. Emergency SOS**
 
-### 2. Start Full-Stack Application
-```bash
-npm run dev
-```
+* Sends emergency alerts with location information.
+* Notifies nearby healthcare facilities and district authorities.
+* Uses Socket.IO for real-time communication.
 
-Run this command from the repository root so both the API and frontend start. Starting only the client workspace will not start the API required for login, session verification, logout, or Socket.IO. The development command stops both processes if either one fails, rather than leaving the frontend running against a missing API.
-Each phone number can register one account; registered users can log in repeatedly, and duplicate registration returns a clear prompt to sign in.
+**6. Referral Management**
 
-This single command concurrently starts:
-- **Backend API**: `http://localhost:5000`
-- **Frontend App**: `http://localhost:5173`
+* Doctors can refer patients to higher-level hospitals.
+* Tracks referrals between healthcare facilities.
+* Helps improve coordination during patient transfers.
 
-Open `http://localhost:5173` in your browser.
-To verify the API is ready, open `http://localhost:5000/api/health`; it should return JSON with `"status":"healthy"`. If that address does not respond, check the backend terminal output and run `npm run dev` from the repository root before retrying authentication.
+**7. Digital Health Records**
 
----
+* Stores patient medical history.
+* Maintains consultation and treatment information.
+* Helps doctors access previous patient records.
 
-## 🧪 Automated System Testing
+**8. Healthcare Analytics**
 
-Run the full end-to-end integration and system test suite:
-```bash
-npm run test
-```
+* Provides healthcare statistics.
+* Helps administrators monitor facilities.
+* Supports better healthcare planning and management.
 
-Verifies:
-- Health check & demo configuration
-- 5-role JWT authentication, session verification, logout, and Socket.IO availability
-- Deterministic clinical triage engine with bilingual explanations
-- Geospatial Haversine medicine locator
-- Emergency SOS dispatch telemetry
-- Authenticated role dashboards
-- HL7 FHIR R4 Patient JSON resource generator
-- Printable PDFKit prescription download
+## 6. Technology Stack
 
----
+**Frontend**
 
-## 📁 Repository Structure
+* React.js
+* Vite
+* Tailwind CSS
+* React Router
+* Axios
 
-```
-Swasthsetu2/
-├── client/                     # React 18 + Vite Frontend
-│   ├── src/
-│   │   ├── api/                # Axios API client & endpoints
-│   │   ├── components/layout/  # Navbar, Footer, DashboardLayout
-│   │   ├── context/            # AuthContext, SocketContext
-│   │   ├── i18n/               # Bilingual EN & HI localization
-│   │   ├── pages/
-│   │   │   ├── auth/           # 1-Click Login
-│   │   │   ├── district/       # CMO Analytics, Facilities, FHIR Reports
-│   │   │   ├── doctor/         # Live Queue, Consultation, Telehealth, Referrals
-│   │   │   ├── facility/       # Appointments, Inventory, Referral transfers
-│   │   │   ├── healthworker/   # Registration, Directory, Triage, Follow-ups
-│   │   │   ├── patient/        # Profile, History, Appointments, Medicine Map
-│   │   │   └── public/         # Landing, About, Contact
-│   │   ├── App.jsx             # React Router DOM configuration
-│   │   └── main.jsx            # Application entry point
-│   ├── tailwind.config.js      # Healthcare SaaS theme
-│   └── vite.config.js          # Vite configuration with proxy
-│
-├── server/                     # Node.js + Express Backend
-│   ├── src/
-│   │   ├── config/             # DB connection & In-Memory Store fallback
-│   │   ├── middleware/         # Auth, Roles, Error Handler
-│   │   ├── models/             # Mongoose schemas (11 models)
-│   │   ├── modules/            # Domain controllers & services
-│   │   │   ├── ai/             # Patient context summarizer
-│   │   │   ├── appointment/    # Token queue & bookings
-│   │   │   ├── auth/           # OTP authentication & JWT
-│   │   │   ├── dashboard/      # Role-specific dashboard aggregations
-│   │   │   ├── emergency/      # SOS dispatcher
-│   │   │   ├── fhir/           # HL7 FHIR R4 standard compliance
-│   │   │   ├── followup/       # Frontline tasks manager
-│   │   │   ├── inventory/      # Medicine stock & Haversine search
-│   │   │   ├── patient/        # Longitudinal records & timeline
-│   │   │   ├── referral/       # Multi-tier referral tracking
-│   │   │   ├── tele/           # Video consultation & PDFKit prescriptions
-│   │   │   └── triage/         # Deterministic rule-based engine
-│   │   ├── sockets/            # Socket.io room broadcasts
-│   │   ├── app.js              # Express app
-│   │   └── index.js            # Server entry point
-│   └── seed/seed.js            # Database seeding utility
-│
-├── docs/                       # Hackathon & Technical Documentation
-│   ├── architecture.md         # Detailed technical architecture
-│   ├── api-contract.md         # API endpoints & payloads
-│   └── demo-script.md          # 5-Minute Pitch & Presentation Guide
-└── package.json                # Monorepo workspaces & scripts
-```
+**Backend**
 
----
+* Node.js
+* Express.js
+* REST APIs
 
-## 🇮🇳 ABDM & Interoperability Standards
-SwasthSetu aligns with India's Ayushman Bharat Digital Mission (ABDM) guidelines:
-- **HL7 FHIR R4 compliant**: Standardized `/fhir/Patient/:id` endpoint.
-- **ABHA Identifier compatibility**: Demo ABHA IDs pre-configured across rural health records.
-- **Audit Trails**: Security compliance logging on critical clinical events.
+**Database**
 
----
+* MongoDB
+* Mongoose
 
-## ⚖️ License
-Released under the MIT License. Developed for the 24-Hour National Healthcare Hackathon.
+**Other Technologies**
 
-#   S w a s t h S e t u - P r o j e c t  
- 
+* Socket.IO – Real-time updates and emergency alerts.
+* WebRTC / Jitsi Meet – Video consultations.
+* PDFKit – Digital prescription generation.
+* Leaflet / OpenStreetMap – Facility location maps.
+* Recharts – Data visualisation.
+* JWT – Authentication.
+* HL7 FHIR R4 – Healthcare data exchange format.
+
+## 7. Authentication
+
+* Role-based login system.
+* OTP-based authentication.
+* JWT-based sessions.
+* Separate dashboard for each user role.
+* Demo accounts for testing all five roles.
+
+## 8. Database and Demo Support
+
+* MongoDB is used for storing application data.
+* An in-memory database is also available for demonstration.
+* The demo includes:
+
+  * 45 patients.
+  * 11 healthcare facilities.
+  * 5 role-based accounts.
+  * Sample appointments.
+  * Medicine inventory.
+  * Patient referrals.
+
+## 9. Project Setup
+
+**Requirements**
+
+* Node.js version 18 or higher.
+* npm version 9 or higher.
+
+**Installation**
+
+1. Open the project folder in VS Code.
+2. Open the terminal.
+3. Install dependencies using `npm install`.
+4. Start the application using `npm run dev`.
+
+**Local URLs**
+
+* Frontend: `http://localhost:5173`
+* Backend: `http://localhost:5000`
+* Health Check: `http://localhost:5000/api/health`
+
+## 10. Testing
+
+Run `npm run test` to execute automated tests.
+
+Testing covers:
+
+1. Authentication and user roles.
+2. API health checks.
+3. Patient triage.
+4. Medicine location search.
+5. Emergency SOS alerts.
+6. Role-based dashboards.
+7. Healthcare data export.
+8. PDF prescription generation.
+
+## 11. Healthcare Standards
+
+* Designed with reference to Ayushman Bharat Digital Mission (ABDM).
+* Supports HL7 FHIR R4 healthcare data formats.
+* Includes demonstration ABHA identifiers.
+* Maintains audit logs for important clinical activities.
+
+## 12. Project Purpose
+
+SwasthSetu aims to:
+
+1. Improve healthcare accessibility in rural India.
+2. Reduce unnecessary hospital visits.
+3. Improve communication between hospitals.
+4. Make patient information easier to access.
+5. Support faster referrals and emergency coordination.
+6. Help healthcare workers provide better assistance.
+7. Improve medicine availability information.
+8. Support digital transformation in public healthcare.
+
+**Important Note:** SwasthSetu is a hackathon demonstration project. It is not a certified medical device and does not replace doctors or official emergency services.
