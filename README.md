@@ -119,11 +119,15 @@ npm install
 npm run dev
 ```
 
+Run this command from the repository root so both the API and frontend start. Starting only the client workspace will not start the API required for login, session verification, logout, or Socket.IO. The development command stops both processes if either one fails, rather than leaving the frontend running against a missing API.
+Each phone number can register one account; registered users can log in repeatedly, and duplicate registration returns a clear prompt to sign in.
+
 This single command concurrently starts:
 - **Backend API**: `http://localhost:5000`
 - **Frontend App**: `http://localhost:5173`
 
 Open `http://localhost:5173` in your browser.
+To verify the API is ready, open `http://localhost:5000/api/health`; it should return JSON with `"status":"healthy"`. If that address does not respond, check the backend terminal output and run `npm run dev` from the repository root before retrying authentication.
 
 ---
 
@@ -136,7 +140,7 @@ npm run test
 
 Verifies:
 - Health check & demo configuration
-- 5-role JWT authentication and session tokens
+- 5-role JWT authentication, session verification, logout, and Socket.IO availability
 - Deterministic clinical triage engine with bilingual explanations
 - Geospatial Haversine medicine locator
 - Emergency SOS dispatch telemetry

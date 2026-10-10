@@ -26,7 +26,7 @@ const UP_DISTRICTS = [
 
 export const Register = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { setSession } = useAuth();
 
   const [step, setStep] = useState(1); // 1 = personal info, 2 = success
   const [loading, setLoading] = useState(false);
@@ -69,13 +69,13 @@ export const Register = () => {
     try {
       const res = await authApi.register(form);
       if (res.success && res.data?.token) {
-        // Auto-login by storing token and user
-        localStorage.setItem('swasthsetu_token', res.data.token);
-        localStorage.setItem('swasthsetu_user', JSON.stringify(res.data.user));
+        setSession(res.data);
         toast.success(res.message || `Welcome, ${form.name}! Account created successfully.`);
         setStep(2);
         // Redirect to patient dashboard after brief success screen
         setTimeout(() => navigate('/patient/dashboard'), 2000);
+      } else {
+        throw new Error(res.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
       if (err.message?.includes('already exists')) {
@@ -322,4 +322,3 @@ export const Register = () => {
     </div>
   );
 };
-

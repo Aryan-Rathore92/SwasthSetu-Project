@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import NavbarLogo from './../../../public/NavbarLogo.png'
+import NavbarLogo from '../../../public/NavbarLogo.png'
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Activity, Globe, Menu, X, ArrowRight, ShieldCheck, User } from 'lucide-react';

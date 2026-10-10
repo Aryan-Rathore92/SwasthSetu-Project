@@ -11,6 +11,19 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('swasthsetu_token'));
   const [loading, setLoading] = useState(true);
 
+  const setSession = (session) => {
+    const { token: newToken, user: newUser } = session;
+    if (!newToken || !newUser) {
+      throw new Error('The server returned an invalid authentication session.');
+    }
+
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('swasthsetu_token', newToken);
+    localStorage.setItem('swasthsetu_user', JSON.stringify(newUser));
+    return newUser;
+  };
+
   useEffect(() => {
     const verifySession = async () => {
       if (token) {
@@ -34,12 +47,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (phone, otp) => {
     const res = await authApi.login(phone, otp);
     if (res.success && res.data) {
-      const { token: newToken, user: newUser } = res.data;
-      setToken(newToken);
-      setUser(newUser);
-      localStorage.setItem('swasthsetu_token', newToken);
-      localStorage.setItem('swasthsetu_user', JSON.stringify(newUser));
-      return newUser;
+      return setSession(res.data);
     }
     throw new Error(res.message || 'Login failed');
   };
@@ -74,6 +82,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user && !!token,
         role: user?.role,
         login,
+        setSession,
         logout,
         getDashboardPathForRole,
       }}
@@ -88,4 +97,3 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
-

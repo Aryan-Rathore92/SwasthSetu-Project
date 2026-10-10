@@ -2,17 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'http';
 import dotenv from 'dotenv';
+import { Server as SocketServer } from 'socket.io';
 
 dotenv.config();
 
 import app from '../app.js';
+import { initSocket } from '../sockets/socketHandler.js';
 
 let server;
+let socketServer;
 let baseUrl;
 
 test.before(async () => {
   await new Promise((resolve) => {
     server = http.createServer(app);
+    socketServer = new SocketServer(server, {
+      cors: { origin: true, methods: ['GET', 'POST'], credentials: true },
+    });
+    initSocket(socketServer);
     server.listen(0, () => {
       const port = server.address().port;
       baseUrl = `http://localhost:${port}`;
@@ -23,7 +30,7 @@ test.before(async () => {
 
 test.after(async () => {
   await new Promise((resolve) => {
-    server.close(resolve);
+    socketServer.close(resolve);
   });
 });
 
@@ -95,6 +102,111 @@ test('3. Authentication Flow for All 5 Roles', async () => {
     assert.ok(loginRes.data.data.token);
     assert.equal(loginRes.data.data.user.role, item.role);
   }
+});
+
+test('3d. Session verification, logout, and Socket.IO are available on the API server', async () => {
+  const login = await request('/api/auth/login', {
+    method: 'POST',
+    body: { phone: '9876543210', otp: '123456' },
+  });
+  assert.equal(login.status, 200);
+
+  const headers = { Authorization: `Bearer ${login.data.data.token}` };
+  const session = await request('/api/auth/me', { headers });
+  assert.equal(session.status, 200);
+  assert.equal(session.data.success, true);
+
+  const logout = await request('/api/auth/logout', { method: 'POST', headers });
+  assert.equal(logout.status, 200);
+  assert.equal(logout.data.success, true);
+
+  const socket = await fetch(`${baseUrl}/socket.io/?EIO=4&transport=polling`);
+  assert.equal(socket.status, 200);
+  assert.match(await socket.text(), /^0/);
+});
+
+test('3a. Registration is repeatable and duplicate phones return a clear conflict', async () => {
+  const registration = {
+    name: 'Repeat Test Patient',
+    phone: '9999999988',
+    age: 28,
+    gender: 'Other',
+    village: 'Test Village',
+  };
+
+  const registrationAttempts = await Promise.all([
+    request('/api/auth/register', { method: 'POST', body: registration }),
+    request('/api/auth/register', { method: 'POST', body: registration }),
+  ]);
+  const firstRegistration = registrationAttempts.find((result) => result.status === 201);
+  const duplicateRegistration = registrationAttempts.find((result) => result.status !== 201);
+  assert.ok(firstRegistration);
+  assert.ok(duplicateRegistration);
+  assert.equal(firstRegistration.status, 201);
+  assert.equal(firstRegistration.data.success, true);
+  assert.ok(firstRegistration.data.data.token);
+
+  const anotherDuplicate = await request('/api/auth/register', {
+    method: 'POST',
+    body: registration,
+  });
+  assert.equal(duplicateRegistration.status, 409);
+  assert.equal(anotherDuplicate.status, 409);
+  assert.equal(anotherDuplicate.data.code, 'PHONE_ALREADY_REGISTERED');
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const loginRes = await request('/api/auth/login', {
+      method: 'POST',
+      body: { phone: registration.phone, otp: '123456' },
+    });
+    assert.equal(loginRes.status, 200);
+    assert.equal(loginRes.data.success, true);
+    assert.ok(loginRes.data.data.token);
+  }
+});
+
+test('3b. Registration validates input without returning an internal error', async () => {
+  const invalidRegistration = await request('/api/auth/register', {
+    method: 'POST',
+    body: {
+      name: 'Invalid Age',
+      phone: '9999999989',
+      age: 'not-a-number',
+      gender: 'Other',
+      village: 'Test Village',
+    },
+  });
+  assert.equal(invalidRegistration.status, 400);
+  assert.equal(invalidRegistration.data.success, false);
+});
+
+test('3c. Concurrent registrations for different phones receive unique identities', async () => {
+  const registrations = await Promise.all([
+    request('/api/auth/register', {
+      method: 'POST',
+      body: {
+        name: 'Concurrent Test One',
+        phone: '9999999984',
+        age: 31,
+        gender: 'Female',
+        village: 'Test Village',
+      },
+    }),
+    request('/api/auth/register', {
+      method: 'POST',
+      body: {
+        name: 'Concurrent Test Two',
+        phone: '9999999985',
+        age: 32,
+        gender: 'Male',
+        village: 'Test Village',
+      },
+    }),
+  ]);
+
+  assert.ok(registrations.every((result) => result.status === 201));
+  assert.notEqual(registrations[0].data.data.user._id, registrations[1].data.data.user._id);
+  assert.notEqual(registrations[0].data.data.patientId, registrations[1].data.data.patientId);
 });
 
 test('4. Deterministic Clinical Triage Engine with Bilingual Explanations', async () => {
@@ -241,4 +353,3 @@ test('9. Printable PDFKit Prescription Generation', async () => {
   assert.ok(ct.includes('application/pdf'));
   assert.ok(res.buffer.byteLength > 1000);
 });
-

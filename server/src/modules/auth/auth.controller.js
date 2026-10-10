@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import { randomUUID } from 'node:crypto';
 import { User } from '../../models/User.js';
 import { memoryStore } from '../../config/memoryStore.js';
 
@@ -151,66 +152,106 @@ export const registerSelf = async (req, res, next) => {
   try {
     const { name, phone, age, gender, village, district = 'Sitapur', address = '' } = req.body;
 
-    if (!name || !phone || !age || !gender || !village) {
+    const normalizedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedPhone = typeof phone === 'string' ? phone.trim() : '';
+    const normalizedVillage = typeof village === 'string' ? village.trim() : '';
+    const normalizedAge = Number(age);
+
+    if (!normalizedName || !normalizedPhone || !age || !gender || !normalizedVillage) {
       return res.status(400).json({
         success: false,
         message: 'Please fill in all required fields: name, phone, age, gender, and village.',
       });
     }
 
-    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+    if (!/^\d{10}$/.test(normalizedPhone)) {
       return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number.' });
+    }
+
+    if (!Number.isInteger(normalizedAge) || normalizedAge < 1 || normalizedAge > 120) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid age between 1 and 120.' });
+    }
+
+    if (!['Male', 'Female', 'Other'].includes(gender)) {
+      return res.status(400).json({ success: false, message: 'Please select a valid gender.' });
+    }
+
+    if (typeof district !== 'string' || !district.trim()) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid district.' });
     }
 
     const secret = process.env.JWT_SECRET || 'swasthsetu_hackathon_jwt_secret_2026_super_safe';
 
     // ── MongoDB mode ──────────────────────────────────────────────────────────
     if (mongoose.connection.readyState === 1) {
-      const existing = await User.findOne({ phone });
+      const existing = await User.findOne({ phone: normalizedPhone });
       if (existing) {
-        return res.status(409).json({ success: false, message: 'An account with this phone number already exists. Please log in instead.' });
+        return res.status(409).json({
+          success: false,
+          message: 'An account with this phone number already exists. Please log in instead.',
+          code: 'PHONE_ALREADY_REGISTERED',
+        });
       }
 
-      const user = await User.create({ name, phone, role: 'patient', language: 'hi' });
+      const user = await User.create({ name: normalizedName, phone: normalizedPhone, role: 'patient', language: 'hi' });
       const { Patient } = await import('../../models/Patient.js');
-      const patCount = await Patient.countDocuments();
+      let patient;
+      try {
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const patCount = await Patient.countDocuments();
+          try {
+            patient = await Patient.create({
+              patientId: `P-${20000 + patCount + 1}`,
+              userId: user._id,
+              name: normalizedName,
+              phone: normalizedPhone,
+              age: normalizedAge,
+              gender,
+              village: normalizedVillage,
+              district: district.trim(),
+              address: typeof address === 'string' && address.trim() ? address.trim() : `${normalizedVillage}, ${district.trim()}`,
+              conditions: [],
+              allergies: [],
+              pregnancy: { isPregnant: false },
+              riskLevel: 'GREEN',
+              consentForSharing: true,
+            });
+            break;
+          } catch (err) {
+            const patientIdCollision = err.code === 11000 && (
+              err.keyPattern?.patientId || err.keyValue?.patientId
+            );
+            if (!patientIdCollision || attempt === 4) throw err;
+          }
+        }
+      } catch (err) {
+        await User.findByIdAndDelete(user._id);
+        throw err;
+      }
 
-      const patient = await Patient.create({
-        patientId: `P-${20000 + patCount + 1}`,
-        userId: user._id,
-        name,
-        phone,
-        age: Number(age),
-        gender,
-        village,
-        district,
-        address: address || `${village}, ${district}`,
-        conditions: [],
-        allergies: [],
-        pregnancy: { isPregnant: false },
-        riskLevel: 'GREEN',
-        consentForSharing: true,
-      });
-
-      const token = jwt.sign({ id: user._id, role: 'patient', phone }, secret, { expiresIn: '7d' });
+      const token = jwt.sign({ id: user._id, role: 'patient', phone: normalizedPhone }, secret, { expiresIn: '7d' });
       return res.status(201).json({
         success: true,
-        message: `Welcome to SwasthSetu, ${name}! Your patient account has been created.`,
-        data: { token, user: { _id: user._id, name, phone, role: 'patient' }, patientId: patient.patientId },
+        message: `Welcome to SwasthSetu, ${normalizedName}! Your patient account has been created.`,
+        data: { token, user: { _id: user._id, name: normalizedName, phone: normalizedPhone, role: 'patient' }, patientId: patient.patientId },
       });
     }
 
     // ── In-Memory mode ────────────────────────────────────────────────────────
-    const existing = memoryStore.users.find(u => u.phone === phone);
+    const existing = memoryStore.users.find(u => u.phone === normalizedPhone);
     if (existing) {
-      return res.status(409).json({ success: false, message: 'An account with this phone number already exists. Please log in instead.' });
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this phone number already exists. Please log in instead.',
+        code: 'PHONE_ALREADY_REGISTERED',
+      });
     }
 
-    const newUserId = `usr-patient-${Date.now()}`;
+    const newUserId = `usr-patient-${randomUUID()}`;
     const newUser = {
       _id: newUserId,
-      name,
-      phone,
+      name: normalizedName,
+      phone: normalizedPhone,
       role: 'patient',
       facilityId: null,
       language: 'hi',
@@ -222,16 +263,16 @@ export const registerSelf = async (req, res, next) => {
     const patCount = memoryStore.patients.length;
     const newPatientId = `P-${20000 + patCount + 1}`;
     const newPatient = {
-      _id: `pat-new-${Date.now()}`,
+      _id: `pat-new-${randomUUID()}`,
       patientId: newPatientId,
       userId: newUserId,
-      name,
-      phone,
-      age: Number(age),
+      name: normalizedName,
+      phone: normalizedPhone,
+      age: normalizedAge,
       gender,
-      village,
-      district,
-      address: address || `${village}, ${district}`,
+      village: normalizedVillage,
+      district: district.trim(),
+      address: typeof address === 'string' && address.trim() ? address.trim() : `${normalizedVillage}, ${district.trim()}`,
       conditions: [],
       allergies: [],
       pregnancy: { isPregnant: false },
@@ -245,14 +286,21 @@ export const registerSelf = async (req, res, next) => {
     };
     memoryStore.patients.push(newPatient);
 
-    const token = jwt.sign({ id: newUserId, role: 'patient', phone }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({ id: newUserId, role: 'patient', phone: normalizedPhone }, secret, { expiresIn: '7d' });
 
     res.status(201).json({
       success: true,
-      message: `Welcome to SwasthSetu, ${name}! Your patient account has been created.`,
-      data: { token, user: { _id: newUserId, name, phone, role: 'patient' }, patientId: newPatientId },
+      message: `Welcome to SwasthSetu, ${normalizedName}! Your patient account has been created.`,
+      data: { token, user: { _id: newUserId, name: normalizedName, phone: normalizedPhone, role: 'patient' }, patientId: newPatientId },
     });
   } catch (err) {
+    if (err.code === 11000 && (err.keyPattern?.phone || err.keyValue?.phone)) {
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this phone number already exists. Please log in instead.',
+        code: 'PHONE_ALREADY_REGISTERED',
+      });
+    }
     next(err);
   }
 };

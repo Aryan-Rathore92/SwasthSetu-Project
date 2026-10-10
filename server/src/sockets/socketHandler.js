@@ -13,6 +13,9 @@ export const initSocket = (io) => {
         console.log(`[Socket] ${socket.id} joined facility:${facilityId}`);
       }
     });
+    socket.on('leave:facility', (facilityId) => {
+      if (facilityId) socket.leave(`facility:${facilityId}`);
+    });
 
     // Join room for doctor
     socket.on('join:doctor', (doctorId) => {
@@ -20,6 +23,9 @@ export const initSocket = (io) => {
         socket.join(`doctor:${doctorId}`);
         console.log(`[Socket] ${socket.id} joined doctor:${doctorId}`);
       }
+    });
+    socket.on('leave:doctor', (doctorId) => {
+      if (doctorId) socket.leave(`doctor:${doctorId}`);
     });
 
     // Join room for patient
@@ -29,11 +35,17 @@ export const initSocket = (io) => {
         console.log(`[Socket] ${socket.id} joined patient:${patientId}`);
       }
     });
+    socket.on('leave:patient', (patientId) => {
+      if (patientId) socket.leave(`patient:${patientId}`);
+    });
 
     // Join room for district admin
     socket.on('join:district', () => {
       socket.join('district');
       console.log(`[Socket] ${socket.id} joined district channel`);
+    });
+    socket.on('leave:district', () => {
+      socket.leave('district');
     });
 
     socket.on('disconnect', () => {
@@ -69,4 +81,3 @@ export const emitToDistrict = (event, data) => {
     ioInstance.to('district').emit(event, data);
   }
 };
-
